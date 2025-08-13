@@ -23,13 +23,16 @@ const topicoGaragemPortaoBasculanteSet = "garagem/portaoBasculante/set";
 function App() {
   const [temp, setTemp] = useState("--");
   const [umid, setUmid] = useState("--");
+  const [mqttConectado, setMqttConectado] = useState(false);
   const client = useRef(null);
 
-  useEffect(() => {
+  const conectarMQTT = () => {
     client.current = new Client(brokerUrl, clientId);
 
-    client.current.onConnectionLost = (responseObject) => {
-      console.error("Conexão perdida:", responseObject.errorMessage);
+    client.current.onConnectionLost = () => {
+      console.warn("Conexão perdida. Tentando reconectar...");
+      setMqttConectado(false);
+      setTimeout(conectarMQTT, 2000);
     };
 
     client.current.onMessageArrived = (message) => {
@@ -48,13 +51,19 @@ function App() {
       useSSL: true,
       onSuccess: () => {
         console.log("Conectado ao broker MQTT");
+        setMqttConectado(true);
         client.current.subscribe(topicoSensorSala);
       },
       onFailure: (err) => {
         console.error("Falha na conexão MQTT:", err);
+        setMqttConectado(false);
+        setTimeout(conectarMQTT, 2000);
       },
     });
+  };
 
+  useEffect(() => {
+    conectarMQTT();
     return () => {
       if (client.current && client.current.isConnected()) {
         client.current.disconnect();
@@ -63,7 +72,7 @@ function App() {
   }, []);
 
   function enviarComando(topico, mensagem) {
-    if (!client.current || !client.current.isConnected()) {
+    if (!mqttConectado) {
       alert("Cliente MQTT não conectado");
       return;
     }
@@ -76,18 +85,18 @@ function App() {
   return (
     <div style={{ backgroundColor: "#0f172a", minHeight: "100vh" }} className="text-light p-4">
       <div className="container">
-        <h1
-          className="text-center mb-5 fw-bold"
-          style={{ color: "#60a5fa" }}
-        >
+        <h1 className="text-center mb-2 fw-bold" style={{ color: "#60a5fa" }}>
           Administração de Casa Inteligente
         </h1>
+        <p className="text-center mb-5">
+          Status MQTT:{" "}
+          <span style={{ color: mqttConectado ? "#22c55e" : "#ef4444" }}>
+            {mqttConectado ? "Conectado" : "Desconectado"}
+          </span>
+        </p>
 
         {/* Monitor DHT22 */}
-        <div
-          className="card text-light shadow-lg mb-5 border-0"
-          style={{ backgroundColor: "#1e293b" }}
-        >
+        <div className="card text-light shadow-lg mb-5 border-0" style={{ backgroundColor: "#1e293b" }}>
           <div className="card-body text-center">
             <h2 className="mb-4" style={{ color: "#60a5fa" }}>🌡️ Monitor DHT22</h2>
             <p className="fs-5">
@@ -103,10 +112,7 @@ function App() {
         <div className="row g-4">
           {/* Quarto */}
           <div className="col-12 col-md-6 col-lg-4">
-            <div
-              className="card shadow-lg h-100 border-0"
-              style={{ backgroundColor: "#1e293b", borderLeft: "5px solid #8b5cf6" }}
-            >
+            <div className="card shadow-lg h-100 border-0" style={{ backgroundColor: "#1e293b", borderLeft: "5px solid #8b5cf6" }}>
               <div className="card-body text-center">
                 <h3 style={{ color: "#8b5cf6" }} className="mb-4">Quarto 🛏️</h3>
                 <div className="mb-4">
@@ -130,10 +136,7 @@ function App() {
 
           {/* Sala */}
           <div className="col-12 col-md-6 col-lg-4">
-            <div
-              className="card shadow-lg h-100 border-0"
-              style={{ backgroundColor: "#1e293b", borderLeft: "5px solid #22c55e" }}
-            >
+            <div className="card shadow-lg h-100 border-0" style={{ backgroundColor: "#1e293b", borderLeft: "5px solid #22c55e" }}>
               <div className="card-body text-center">
                 <h3 style={{ color: "#22c55e" }} className="mb-4">Sala 🛋️</h3>
                 <div className="mb-4">
@@ -157,10 +160,7 @@ function App() {
 
           {/* Garagem */}
           <div className="col-12 col-md-6 col-lg-4">
-            <div
-              className="card shadow-lg h-100 border-0"
-              style={{ backgroundColor: "#1e293b", borderLeft: "5px solid #f59e0b" }}
-            >
+            <div className="card shadow-lg h-100 border-0" style={{ backgroundColor: "#1e293b", borderLeft: "5px solid #f59e0b" }}>
               <div className="card-body text-center">
                 <h3 style={{ color: "#f59e0b" }} className="mb-4">Garagem 🚗</h3>
                 <div className="mb-4">
@@ -170,7 +170,7 @@ function App() {
                 </div>
                 <div className="mb-4">
                   <h5 style={{ color: "#60a5fa" }}>🚪 Portão Social</h5>
-                  <button className="btn" style={{ backgroundColor: "#8b5cf6", color: "#fff" }} onClick={() => enviarComando(topicoGaragemPortaoSocialSet, "abrir")}>Abrir</button>
+                  <button className="btn btn-lg" style={{ backgroundColor: "#8b5cf6", color: "#fff", padding: "12px 24px" }} onClick={() => enviarComando(topicoGaragemPortaoSocialSet, "abrir")}>Abrir</button>
                 </div>
                 <div>
                   <h5 style={{ color: "#60a5fa" }}>🚪 Portão Basculante</h5>
