@@ -24,8 +24,15 @@ function App() {
   const [temp, setTemp] = useState("--");
   const [umid, setUmid] = useState("--");
   const [mqttConectado, setMqttConectado] = useState(false);
-  const [temaClaro, setTemaClaro] = useState(false); // Estado para tema
+  const [temaClaro, setTemaClaro] = useState(false);
+  const [logs, setLogs] = useState([]); // Estado para armazenar o log
   const client = useRef(null);
+
+  // Função para adicionar log
+  const adicionarLog = (mensagem) => {
+    const hora = new Date().toLocaleTimeString();
+    setLogs((prevLogs) => [`[${hora}] ${mensagem}`, ...prevLogs]);
+  };
 
   const conectarMQTT = () => {
     client.current = new Client(brokerUrl, clientId);
@@ -72,7 +79,7 @@ function App() {
     };
   }, []);
 
-  function enviarComando(topico, mensagem) {
+  function enviarComando(topico, mensagem, descricao) {
     if (!mqttConectado) {
       alert("Cliente MQTT não conectado");
       return;
@@ -80,10 +87,11 @@ function App() {
     const msg = new Message(mensagem);
     msg.destinationName = topico;
     client.current.send(msg);
+    adicionarLog(descricao); // Registra a ação no log
     console.log(`Enviado para ${topico}: ${mensagem}`);
   }
 
-  // Definição das cores de acordo com o tema
+  // Definição das cores
   const cores = temaClaro
     ? {
         fundo: "#f8fafc",
@@ -108,7 +116,7 @@ function App() {
         destaque3: "#f59e0b",
       };
 
-  // Estilo do toggle switch
+  // Estilo do switch
   const switchStyle = {
     position: "relative",
     display: "inline-block",
@@ -151,12 +159,26 @@ function App() {
         <h1 className="text-center mb-2 fw-bold" style={{ color: cores.titulo }}>
           Administração de Casa Inteligente
         </h1>
-        <p className="text-center mb-5">
+        <p className="text-center mb-3">
           Status MQTT:{" "}
           <span style={{ color: mqttConectado ? cores.destaque2 : cores.off }}>
             {mqttConectado ? "Conectado" : "Desconectado"}
           </span>
         </p>
+
+        {/* LOG */}
+        <div className="card mb-4 shadow-sm" style={{ backgroundColor: cores.card }}>
+          <div className="card-body">
+            <h5 style={{ color: cores.titulo }}>📜 Log de Ações</h5>
+            <ul className="list-unstyled mb-0" style={{ maxHeight: "150px", overflowY: "auto" }}>
+              {logs.length === 0 ? (
+                <li style={{ color: cores.off }}>Nenhuma ação registrada ainda.</li>
+              ) : (
+                logs.map((log, index) => <li key={index}>{log}</li>)
+              )}
+            </ul>
+          </div>
+        </div>
 
         {/* Monitor DHT22 */}
         <div className="card shadow-lg mb-5 border-0" style={{ backgroundColor: cores.card }}>
@@ -180,18 +202,24 @@ function App() {
                 <h3 style={{ color: cores.destaque1 }} className="mb-4">Quarto 🛏️</h3>
                 <div className="mb-4">
                   <h5 style={{ color: cores.titulo }}>💡 LED Quarto</h5>
-                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }} onClick={() => enviarComando(topicoQuartoLuz, "ON")}>Ligar</button>
-                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }} onClick={() => enviarComando(topicoQuartoLuz, "OFF")}>Desligar</button>
+                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }}
+                    onClick={() => enviarComando(topicoQuartoLuz, "ON", "Ligando luz do quarto")}>Ligar</button>
+                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }}
+                    onClick={() => enviarComando(topicoQuartoLuz, "OFF", "Desligando luz do quarto")}>Desligar</button>
                 </div>
                 <div className="mb-4">
                   <h5 style={{ color: cores.titulo }}>🔌 Tomada Quarto</h5>
-                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }} onClick={() => enviarComando(topicoQuartoTomada, "ON")}>Ligar</button>
-                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }} onClick={() => enviarComando(topicoQuartoTomada, "OFF")}>Desligar</button>
+                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }}
+                    onClick={() => enviarComando(topicoQuartoTomada, "ON", "Ligando tomada do quarto")}>Ligar</button>
+                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }}
+                    onClick={() => enviarComando(topicoQuartoTomada, "OFF", "Desligando tomada do quarto")}>Desligar</button>
                 </div>
                 <div>
                   <h5 style={{ color: cores.titulo }}>🪟 Cortina</h5>
-                  <button className="btn" style={{ backgroundColor: cores.destaque1, color: "#fff" }} onClick={() => enviarComando(topicoQuartoCortinaAbrir, "ON")}>Abrir</button>
-                  <button className="btn ms-2" style={{ backgroundColor: "#334155", color: "#fff" }} onClick={() => enviarComando(topicoQuartoCortinaFechar, "ON")}>Fechar</button>
+                  <button className="btn" style={{ backgroundColor: cores.destaque1, color: "#fff" }}
+                    onClick={() => enviarComando(topicoQuartoCortinaAbrir, "ON", "Abrindo cortina do quarto")}>Abrir</button>
+                  <button className="btn ms-2" style={{ backgroundColor: "#334155", color: "#fff" }}
+                    onClick={() => enviarComando(topicoQuartoCortinaFechar, "ON", "Fechando cortina do quarto")}>Fechar</button>
                 </div>
               </div>
             </div>
@@ -204,18 +232,24 @@ function App() {
                 <h3 style={{ color: cores.destaque2 }} className="mb-4">Sala 🛋️</h3>
                 <div className="mb-4">
                   <h5 style={{ color: cores.titulo }}>💡 Luz da Sala</h5>
-                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }} onClick={() => enviarComando(topicoSalaLuz, "on")}>Ligar</button>
-                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }} onClick={() => enviarComando(topicoSalaLuz, "off")}>Desligar</button>
+                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }}
+                    onClick={() => enviarComando(topicoSalaLuz, "on", "Ligando luz da sala")}>Ligar</button>
+                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }}
+                    onClick={() => enviarComando(topicoSalaLuz, "off", "Desligando luz da sala")}>Desligar</button>
                 </div>
                 <div className="mb-4">
                   <h5 style={{ color: cores.titulo }}>❄️ Ar Condicionado</h5>
-                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }} onClick={() => enviarComando(topicoSalaAr, "on")}>Ligar</button>
-                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }} onClick={() => enviarComando(topicoSalaAr, "off")}>Desligar</button>
+                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }}
+                    onClick={() => enviarComando(topicoSalaAr, "on", "Ligando ar-condicionado da sala")}>Ligar</button>
+                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }}
+                    onClick={() => enviarComando(topicoSalaAr, "off", "Desligando ar-condicionado da sala")}>Desligar</button>
                 </div>
                 <div>
                   <h5 style={{ color: cores.titulo }}>💧 Umidificador</h5>
-                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }} onClick={() => enviarComando(topicoSalaUmidificador, "on")}>Ligar</button>
-                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }} onClick={() => enviarComando(topicoSalaUmidificador, "off")}>Desligar</button>
+                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }}
+                    onClick={() => enviarComando(topicoSalaUmidificador, "on", "Ligando umidificador da sala")}>Ligar</button>
+                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }}
+                    onClick={() => enviarComando(topicoSalaUmidificador, "off", "Desligando umidificador da sala")}>Desligar</button>
                 </div>
               </div>
             </div>
@@ -228,17 +262,22 @@ function App() {
                 <h3 style={{ color: cores.destaque3 }} className="mb-4">Garagem 🚗</h3>
                 <div className="mb-4">
                   <h5 style={{ color: cores.titulo }}>💡 Luz da Garagem</h5>
-                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }} onClick={() => enviarComando(topicoGaragemLuzSet, "ON")}>Ligar</button>
-                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }} onClick={() => enviarComando(topicoGaragemLuzSet, "OFF")}>Desligar</button>
+                  <button className="btn" style={{ backgroundColor: cores.led, color: "#fff" }}
+                    onClick={() => enviarComando(topicoGaragemLuzSet, "ON", "Ligando luz da garagem")}>Ligar</button>
+                  <button className="btn ms-2" style={{ backgroundColor: cores.off, color: "#fff" }}
+                    onClick={() => enviarComando(topicoGaragemLuzSet, "OFF", "Desligando luz da garagem")}>Desligar</button>
                 </div>
                 <div className="mb-4">
                   <h5 style={{ color: cores.titulo }}>🚪 Portão Social</h5>
-                  <button className="btn btn-lg" style={{ backgroundColor: cores.destaque1, color: "#fff", padding: "12px 24px" }} onClick={() => enviarComando(topicoGaragemPortaoSocialSet, "abrir")}>Abrir</button>
+                  <button className="btn btn-lg" style={{ backgroundColor: cores.destaque1, color: "#fff" }}
+                    onClick={() => enviarComando(topicoGaragemPortaoSocialSet, "abrir", "Abrindo portão social")}>Abrir</button>
                 </div>
                 <div>
                   <h5 style={{ color: cores.titulo }}>🚪 Portão Basculante</h5>
-                  <button className="btn" style={{ backgroundColor: cores.destaque1, color: "#fff" }} onClick={() => enviarComando(topicoGaragemPortaoBasculanteSet, "abrir")}>Abrir</button>
-                  <button className="btn ms-2" style={{ backgroundColor: "#334155", color: "#fff" }} onClick={() => enviarComando(topicoGaragemPortaoBasculanteSet, "fechar")}>Fechar</button>
+                  <button className="btn" style={{ backgroundColor: cores.destaque1, color: "#fff" }}
+                    onClick={() => enviarComando(topicoGaragemPortaoBasculanteSet, "abrir", "Abrindo portão basculante")}>Abrir</button>
+                  <button className="btn ms-2" style={{ backgroundColor: "#334155", color: "#fff" }}
+                    onClick={() => enviarComando(topicoGaragemPortaoBasculanteSet, "fechar", "Fechando portão basculante")}>Fechar</button>
                 </div>
               </div>
             </div>
