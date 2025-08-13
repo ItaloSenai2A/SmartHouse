@@ -1,6 +1,7 @@
 // src/App.jsx
 import { useEffect, useState, useRef } from "react";
-import { Client, Message } from "paho-mqtt";
+//biblioteca que serve para permitir que seu código se conecte e troque mensagens com um broker MQTT — como o broker.hivemq.com
+import { Client, Message } from "paho-mqtt"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.js";
 
