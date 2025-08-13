@@ -172,7 +172,10 @@ function App() {
             <h5 style={{ color: cores.titulo }}>📜 Log de Ações</h5>
             <ul className="list-unstyled mb-0" style={{ maxHeight: "150px", overflowY: "auto" }}>
               {logs.length === 0 ? (
-                <li style={{ color: cores.off }}>Nenhuma ação registrada ainda.</li>
+                <li style={{ color: temaClaro ? "#000" : "#fff" }}>
+                Nenhuma ação registrada ainda.
+              </li>
+              
               ) : (
                 logs.map((log, index) => <li key={index}>{log}</li>)
               )}
@@ -185,11 +188,14 @@ function App() {
           <div className="card-body text-center">
             <h2 className="mb-4" style={{ color: cores.titulo }}>🌡️ Monitor DHT22</h2>
             <p className="fs-5">
-              <strong style={{ color: cores.destaque2 }}>Temperatura:</strong> {temp} °C
-            </p>
-            <p className="fs-5">
-              <strong style={{ color: cores.destaque2 }}>Umidade:</strong> {umid} %
-            </p>
+  <strong style={{ color: cores.destaque2 }}>Temperatura:</strong>{" "}
+  <span style={{ color: temaClaro ? "#000" : "#fff" }}>{temp} °C</span>
+</p>
+<p className="fs-5">
+  <strong style={{ color: cores.destaque2 }}>Umidade:</strong>{" "}
+  <span style={{ color: temaClaro ? "#000" : "#fff" }}>{umid} %</span>
+</p>
+
           </div>
         </div>
 
