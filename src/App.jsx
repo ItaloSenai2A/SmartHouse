@@ -171,15 +171,19 @@ function App() {
           <div className="card-body">
             <h5 style={{ color: cores.titulo }}>📜 Log de Ações</h5>
             <ul className="list-unstyled mb-0" style={{ maxHeight: "150px", overflowY: "auto" }}>
-              {logs.length === 0 ? (
-                <li style={{ color: temaClaro ? "#000" : "#fff" }}>
-                Nenhuma ação registrada ainda.
-              </li>
-              
-              ) : (
-                logs.map((log, index) => <li key={index}>{log}</li>)
-              )}
-            </ul>
+  {logs.length === 0 ? (
+    <li style={{ color: temaClaro ? "#000" : "#fff" }}>
+      Nenhuma ação registrada ainda.
+    </li>
+  ) : (
+    logs.map((log, index) => (
+      <li key={index} style={{ color: temaClaro ? "#000" : "#fff" }}>
+        {log}
+      </li>
+    ))
+  )}
+</ul>
+
           </div>
         </div>
 
