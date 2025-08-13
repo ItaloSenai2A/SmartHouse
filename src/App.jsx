@@ -1,6 +1,8 @@
 // src/App.jsx
 import { useEffect, useState, useRef } from "react";
 import { Client, Message } from "paho-mqtt";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.js";
 
 const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
 const clientId = "webClient-" + Math.floor(Math.random() * 100000);
